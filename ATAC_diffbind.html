@@ -1,0 +1,309 @@
+---
+title: "ATAC-seq differential open chromatin analysis"
+author: "Brook Wassie"
+date: "August 13, 2017"
+output: html_document
+---
+
+
+# Statistical Analysis of differential open chromatin sites for ATAC-seq
+
+## Introduction
+
+ATAC-seq (Assay for Transposase-Accessible Chromatin using Sequencing) is a genomic assay that reveals open chromatin sites in the genome using the Tn5 transposase. As with any Omics assay, ATAC-seq can be used to elucidate genomic differences between two conditions. In this vignette, we will use the DiffBind R package to statistically model and test differences in open chromatin sites between iPSC derived motor neurons from ALS and healthy patients. 
+
+For more information on the DiffBind package
+
+User guide: https://bioconductor.org/packages/release/bioc/vignettes/DiffBind/inst/doc/DiffBind.pdf
+Rreference manual: https://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf
+
+##1. Load peaks and counts
+
+
+
+
+
+
+
+```r
+samples=dba(sampleSheet="sample_sheet_diffBind.csv")
+```
+
+```
+## Warning in message(as.character(samples$SampleID[i]), " ",
+## as.character(samples$Tissue[i]), : NAs introduced by coercion
+```
+
+```
+## 25iCTR_un_1 d32_diMNS CTR 25iCTR_Untreated CTR_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 83iCTR_ASO_1 d32_diMNS CTR 83iCTR_ASO CTR_treated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 30ALS_un_1 d32_diMNS ALS 30ALS_Untreated ALS_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 52ALS_un_2 d32_diMNS ALS 52ALS_Untreated ALS_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 25iCTR_ASO_1 d32_diMNS CTR 25iCTR_ASO CTR_treated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 52ALS_un_1 d32_diMNS ALS 52ALS_Untreated ALS_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 30ALS_ASO_1 d32_diMNS ALS 30ALS_ASO ALS_treated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 83iCTR_un_2 d32_diMNS CTR 83iCTR_Untreated CTR_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 52ALS_ASO_2 d32_diMNS ALS 52ALS_ASO ALS_treated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 83iCTR_un_1 d32_diMNS CTR 83iCTR_Untreated CTR_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 52ALS_ASO_1 d32_diMNS ALS 52ALS_ASO ALS_treated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 25iCTR_un_2 d32_diMNS CTR 25iCTR_Untreated CTR_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 83iCTR_ASO_2 d32_diMNS CTR 83iCTR_ASO CTR_treated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 30ALS_un_2 d32_diMNS ALS 30ALS_Untreated ALS_Untreated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```
+## 30ALS_ASO_2 d32_diMNS ALS 30ALS_ASO ALS_treated NA macs
+```
+
+```
+## Warning in cbind(NULL, c(sampID, tissue, factor, condition, consensus,
+## peak.caller, : NAs introduced by coercion
+```
+
+```r
+samples
+```
+
+```
+## 15 Samples, 104040 sites in matrix (190686 total):
+##              ID    Tissue Factor        Condition     Treatment Caller
+## 1   25iCTR_un_1 d32_diMNS    CTR 25iCTR_Untreated CTR_Untreated   macs
+## 2  83iCTR_ASO_1 d32_diMNS    CTR       83iCTR_ASO   CTR_treated   macs
+## 3    30ALS_un_1 d32_diMNS    ALS  30ALS_Untreated ALS_Untreated   macs
+## 4    52ALS_un_2 d32_diMNS    ALS  52ALS_Untreated ALS_Untreated   macs
+## 5  25iCTR_ASO_1 d32_diMNS    CTR       25iCTR_ASO   CTR_treated   macs
+## 6    52ALS_un_1 d32_diMNS    ALS  52ALS_Untreated ALS_Untreated   macs
+## 7   30ALS_ASO_1 d32_diMNS    ALS        30ALS_ASO   ALS_treated   macs
+## 8   83iCTR_un_2 d32_diMNS    CTR 83iCTR_Untreated CTR_Untreated   macs
+## 9   52ALS_ASO_2 d32_diMNS    ALS        52ALS_ASO   ALS_treated   macs
+## 10  83iCTR_un_1 d32_diMNS    CTR 83iCTR_Untreated CTR_Untreated   macs
+## 11  52ALS_ASO_1 d32_diMNS    ALS        52ALS_ASO   ALS_treated   macs
+## 12  25iCTR_un_2 d32_diMNS    CTR 25iCTR_Untreated CTR_Untreated   macs
+## 13 83iCTR_ASO_2 d32_diMNS    CTR       83iCTR_ASO   CTR_treated   macs
+## 14   30ALS_un_2 d32_diMNS    ALS  30ALS_Untreated ALS_Untreated   macs
+## 15  30ALS_ASO_2 d32_diMNS    ALS        30ALS_ASO   ALS_treated   macs
+##    Intervals
+## 1      56203
+## 2      63962
+## 3      81044
+## 4      64528
+## 5      59624
+## 6      87173
+## 7      88672
+## 8      42212
+## 9      51366
+## 10     73185
+## 11     83248
+## 12     62432
+## 13     39097
+## 14     63962
+## 15     86928
+```
+
+
+```r
+samples_count = dba.count(samples,score=DBA_SCORE_READS)
+samples_count
+```
+
+```
+## 15 Samples, 104040 sites in matrix:
+##              ID    Tissue Factor        Condition     Treatment Caller
+## 1   25iCTR_un_1 d32_diMNS    CTR 25iCTR_Untreated CTR_Untreated counts
+## 2  83iCTR_ASO_1 d32_diMNS    CTR       83iCTR_ASO   CTR_treated counts
+## 3    30ALS_un_1 d32_diMNS    ALS  30ALS_Untreated ALS_Untreated counts
+## 4    52ALS_un_2 d32_diMNS    ALS  52ALS_Untreated ALS_Untreated counts
+## 5  25iCTR_ASO_1 d32_diMNS    CTR       25iCTR_ASO   CTR_treated counts
+## 6    52ALS_un_1 d32_diMNS    ALS  52ALS_Untreated ALS_Untreated counts
+## 7   30ALS_ASO_1 d32_diMNS    ALS        30ALS_ASO   ALS_treated counts
+## 8   83iCTR_un_2 d32_diMNS    CTR 83iCTR_Untreated CTR_Untreated counts
+## 9   52ALS_ASO_2 d32_diMNS    ALS        52ALS_ASO   ALS_treated counts
+## 10  83iCTR_un_1 d32_diMNS    CTR 83iCTR_Untreated CTR_Untreated counts
+## 11  52ALS_ASO_1 d32_diMNS    ALS        52ALS_ASO   ALS_treated counts
+## 12  25iCTR_un_2 d32_diMNS    CTR 25iCTR_Untreated CTR_Untreated counts
+## 13 83iCTR_ASO_2 d32_diMNS    CTR       83iCTR_ASO   CTR_treated counts
+## 14   30ALS_un_2 d32_diMNS    ALS  30ALS_Untreated ALS_Untreated counts
+## 15  30ALS_ASO_2 d32_diMNS    ALS        30ALS_ASO   ALS_treated counts
+##    Intervals FRiP
+## 1     104040 0.29
+## 2     104040 0.20
+## 3     104040 0.30
+## 4     104040 0.30
+## 5     104040 0.21
+## 6     104040 0.28
+## 7     104040 0.36
+## 8     104040 0.23
+## 9     104040 0.22
+## 10    104040 0.24
+## 11    104040 0.29
+## 12    104040 0.22
+## 13    104040 0.16
+## 14    104040 0.26
+## 15    104040 0.29
+```
+
+
+```r
+dba.plotHeatmap(samples_count)
+```
+
+![plot of chunk plot heatmap and PCA](figure/plot heatmap and PCA-1.svg)
+
+```r
+dba.plotPCA(example_count,DBA_FACTOR,label=DBA_ID,labelSize=.4,dotsize=1)
+```
+
+```
+## Error in pv.check(DBA, bCheckEmpty = TRUE): object 'example_count' not found
+```

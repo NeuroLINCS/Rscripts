@@ -1,0 +1,5 @@
+SampleID,Tissue,Factor,Condition,Treatment,Replicate,bamReads,ControlID,bamControl,Peaks,PeakCaller
+25iCTR,d32_diMNS,CTR,NA,NA,1,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/aligned/1_noMT_sorted.bam,,,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/macs/1_noMT_sorted_qVal_0.05_peaks.narrowPeak,macs
+83iCTR,d32_diMNS,CTR,NA,NA,2,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/aligned/2_noMT_sorted.bam,,,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/macs/2_noMT_sorted_qVal_0.05_peaks.narrowPeak,macs
+30iALS,d32_diMNS,ALS,NA,NA,1,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/aligned/3_noMT_sorted.bam,,,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/macs/3_noMT_sorted_qVal_0.05_peaks.narrowPeak,macs
+52iALS,d32_diMNS,ALS,NA,NA,2,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/aligned/4_noMT_sorted.bam,,,/home/bwassie/playground/data/Neurolincs/JH_d32_diMNS_ASO/macs/4_noMT_sorted_qVal_0.05_peaks.narrowPeak,macs
