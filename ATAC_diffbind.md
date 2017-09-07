@@ -113,7 +113,7 @@ dba.plotHeatmap(samples_count)
 dba.plotPCA(samples_count,DBA_FACTOR,label=DBA_ID)
 ```
 
-![plot of chunk plot heatmap and PCA](figure/plot heatmap and PCA-2.png)
+![plot of chunk plot heatmap and PCA](figure/plot_heatmap_and_PCA-2.svg)
 
 
 ## 3. Setting up contrasts and performing DEseq2 analysis
