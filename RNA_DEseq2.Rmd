@@ -1,0 +1,217 @@
+---
+title: 'Statistical Analysis of differential gene expression in NeuroLINCS'
+author: "Jenny Wu"
+date: "July 31, 2017"
+output: word_document
+---
+========================================================
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(RCurl)
+
+read.csv.orig = read.csv
+
+read.csv = function(file, ...) {
+  if (is.character(file)) {
+    if (grepl('^https://', file)) {
+      data = getURL(file, ssl.verifypeer=0L, followlocation=1L)
+      return (read.csv.orig(text=data, ...))  
+    } else if (grepl('^http://', file)) {
+      data = getURL(file)
+      return (read.csv.orig(text=data, ...)) 
+    } else {
+      return (read.csv.orig(file, ...))
+    }
+  } else {
+    return (read.csv.orig(file, ...))
+  }
+}
+```
+
+# Introduction
+
+The DESeq2 package provides functions to test for differential expression using count data. This vignette is based on the summarized data from the transcriptomic experiment (RNA-seq) that uses Human iPSCs and iMN cells. This vignette loads one study of 6 ALS samples and 6 controls samples from level 3 (3 biological replicates per group, two growth replicates for each biological replicate), performs statistical tests and generates level 4 data,i.e.differentially expressed gene list.
+
+For details of how DESeq2 works and its parameter setting, please refer to 
+
+DESeq2 manual: https://bioconductor.org/packages/release/bioc/manuals/DESeq2/man/DESeq2.pdf
+
+DESeq2 vignette: https://www.bioconductor.org/packages/3.3/bioc/vignettes/DESeq2/inst/doc/DESeq2.pdf
+
+
+
+# 1. Load the read count data
+
+We first load the count file with *read.delim*. For input, the DESeq2 package expects count data as obtained in the form of a matrix of **integer** values. The value in the i-th row and the j-th column of the matrix represents how many reads have been mapped to gene i in sample j. These count values must be **raw** counts of sequencing reads.
+
+
+```{r}
+countsTable <- read.csv("https://hpc.oit.uci.edu/~jiew5/dcic.csv", header=T, stringsAsFactors=FALSE,check.names=F)
+```
+
+We specify that the first line of our file is the header and disable treating the strings in the file as factors.
+
+```{r}
+head(countsTable)
+
+```
+
+The first column of the file is the gene names so we use them as the row names.
+```{r}
+rownames(countsTable) <- countsTable$gene
+```
+
+After setting the row names we remove the first column from the table so that the *countsTable* is the count matrix now. 
+
+```{r}
+countsTable <- countsTable[,-1]
+```
+
+Use *head* to examine the matrix.
+```{r}
+head(countsTable)
+
+dim(countsTable)
+```
+So we have read counts for the 23708 genes from 12 samples.
+
+# 2. Set up experiment
+
+Now that we have the count matrix, we set up the experiment in DEseq2. First load the package, 
+
+```{r,message=F, warning=F}
+library(DESeq2)
+```
+
+Then we set up the metadata table for 12 samples. Note that the length of this factor vector should be the same as the number of columns in the data matrix.
+
+```{r}
+conds<-factor(c(rep("ALS",6),rep("CTR",6)))
+
+summary(conds)
+
+id=substr(colnames(countsTable),0,3)
+
+colData=data.frame(condition=conds,subject=id) 
+
+colData
+```
+
+We then construct the data object from the matrix of counts and the metadata table
+
+```{r}
+
+(dds<-DESeqDataSetFromMatrix(countsTable,colData,design=~ condition))
+
+```
+Since we  have two growth replicates for each subject, we need to collapse them. In order to do so, we use
+
+```{r}
+ddsCollapsed <- collapseReplicates(dds,groupby = dds$subject,renameCols = F)
+
+dds<-ddsCollapsed
+
+```
+
+
+# 3. Exploratory data analysis
+
+We first examine the relationship between variance $\sigma^2$ and mean $\mu$ of genes across samples.
+
+```{r}
+mu=rowMeans(countsTable)
+
+sigma2=apply(countsTable,1,var)
+
+plot(log(mu),log(sigma2),xlim=c(0,log(max(mu))), ylim=c(0,log(max(mu))),pch=16, cex=0.3)
+
+abline(0,1,col="red")
+```
+
+We see that the variance grows with the mean, i.e. over dispersion. The red line shows where the variance equals the mean (as in Poisson distribution). To correct for this heteroskedasticity, we use regularized log transfor to transform the data before doing the analysis.
+
+```{r}
+rld<-rlog(dds)
+
+head(assay(rld))
+
+colnames(rld)=colnames(assay(ddsCollapsed))
+```
+
+The function *rlog* returns a *SummarizedExperiment* object which contains the rlog-transformed values in its assay slot. 
+
+After transforming the data, we use PCA to visualize sample-to-sample distances. In this method, the data points (i.e., here, the samples that have 23710-D) are projected onto the 2-D plane such that they spread out in the two directions which explain most of the differences in the data. The x-axis is the direction (or principal component) which separates the data points the most. The amount of the total variance that is explained by the component is printed in the axis label.
+
+```{r}
+plotPCA(rld, intgroup = "condition")
+```
+
+We use the function *plotPCA* that comes with DESeq2 package. The term "condition" specified by intgroup is the group for labeling the samples; they tell the function to use them to choose colors. In this example, the control samples are well separated from the treated samples so we expect to find differentially expressed genes.
+
+# 4. Differential expression analysis
+
+Finally we are ready to run the differential expression pipeline. With the data object *dds* prepared, the DESeq2 analysis can now be run with a single call to the function *DESeq*:
+
+```{r}
+dds<-DESeq(dds)
+```
+
+This will print out a list of messages for the various steps it performs. For more details, please refer to DESeq2 manual, which can be accessed by typing *?DESeq*. Briefly these are: first estimate the size factors (normalization), then estimate the dispersion for each gene ($\sigma^2$ or equivalently $\alpha$), and lastly fit a generalized linear model (See class slides for details)
+
+# 5. Accessing results
+
+*DESeq* function returns a *DESeqDataSet* object that contains all the fitted information within it. Calling the *results* function without any arguments will extract the estimated log2 fold changes and p values for the **last** variable in the design formula *design=~ condition*, which is *condition : TRT vs. CTRL* in this case. 
+
+```{r}
+(res <- results(dds))
+```
+
+To get the meaning of the columns,
+```{r}
+
+mcols(res, use.names=TRUE)
+
+```
+
+DESeq2 performs for *each gene* a hypothesis test to see whether the observeed data give enough evidence to decide against the null hypothesis, that is there is no effect of the treatment on the gene and that the observed difference between treatment and control was merely caused by experimental variability. The result of this test is reported as a p value, and it is found in the column *pvalue*. A p value indicates the probability that a fold change as strong as the observed one, or even stronger, would be seen under the situation described by the null hypothesis. By default, this p value is adjusted using Benjamini-Hochberg method (See class slides).
+
+The column *log2FoldChange* ( $\beta_1$ in the GLM models in class slides) that we are trying to estimate) tells us how much the gene's expression would change due to treatment in comparison to control samples. This value is reported on a logarithmic scale to base 2 (see link function in GLM in class slides).
+
+We can also summarize the results using function *summary*
+
+```{r}
+summary(res)
+```
+
+We can sort the results by the adjusted p value in ascending order.
+
+```{r}
+
+res<-res[order(res$padj),]
+
+```
+
+We can also subset the results so it only contains genes with BH adjusted p value < 0.05.
+
+```{r}
+deg=subset(res,padj<0.05)
+```
+
+We can export the results as spreadsheet using *write.csv()*
+
+```{r,eval=F}
+write.csv(as.data.frame(res),file="results.csv")
+```
+
+
+# 6. Session information
+
+It is good practice to always include the session information that reports the version numbers of R and all the packages used in this session.
+
+```{r}
+
+sessionInfo()
+
+```
+
+
