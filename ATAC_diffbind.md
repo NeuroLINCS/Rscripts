@@ -107,7 +107,7 @@ Next we will make a heatmap and a PCA plot to evaluate our data. `dba.plotHeatma
 dba.plotHeatmap(samples_count)
 ```
 
-![plot of chunk plot heatmap and PCA](figure/plot heatmap and PCA-1.svg?raw=true)
+![plot of chunk plot heatmap and PCA](figure/plot heatmap and PCA-1.svg?sanitize=true)
 
 ```r
 dba.plotPCA(samples_count,DBA_FACTOR,label=DBA_ID)
