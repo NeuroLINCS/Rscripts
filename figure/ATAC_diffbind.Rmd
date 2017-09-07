@@ -1,0 +1,106 @@
+---
+title: "ATAC-seq differential open chromatin analysis"
+author: "Brook Wassie"
+date: "August 15, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Statistical Analysis of Differentially Open Chromatin Sites
+
+
+## Introduction
+
+ATAC-seq (Assay for Transposase-Accessible Chromatin using Sequencing) is a genomic assay that reveals open chromatin sites in the genome using the Tn5 transposase. As with any Omics assay, ATAC-seq can be used to elucidate genomic differences between two conditions. In this vignette, we will use the DiffBind R package to statistically model and test differences in open chromatin sites between iPSC derived motor neurons from two ALS and two healthy patients. 
+
+For more information on the DiffBind package:
+
+[User guide](https://bioconductor.org/packages/release/bioc/vignettes/DiffBind/inst/doc/DiffBind.pdf)
+
+[Reference manual](https://bioconductor.org/packages/release/bioc/manuals/DiffBind/man/DiffBind.pdf)
+
+## 1. Load peaks and counts
+
+We will first load the DiffBind package. 
+
+```{r load diffbind, messages=FALSE, results='hide', warning=FALSE}
+library(DiffBind)
+```
+
+In order to load our data, need to provide diffbind's `dba()` function with a samplesheet containing information about each sample (name, condition, replicate...etc), the locations of the peak files (bed format), and the locations of the bam files containing the aligned reads. The samplesheet can be a dataframe or a csv file. In this example, we will use a csv file. The result of the call to `dba()` is a DBA object.  
+
+
+```{r load samplesheet, warning=FALSE, messages=FALSE}
+samples=dba(sampleSheet="sample_sheet_diffBind_rmdtest.csv")
+samples
+```
+
+Each sample has an ID (name), Tissue, Factor, Condition, Treatment, and peak caller field. It is recommended to put as much relevant information into the samplesheet as possible. The Intervals field shows the number of peaks for each sample while the FRiP shows the fraction of reads in peaks. 
+
+We will then create a unified set of genomic intervals (or peaks) for all samples and assign a score to each interval by using `dba.count()`. This funtion will merge overlapping intervals together. By default, it will remove any intervals that are not present in at least two samples (this can be adjusted by the `minOverlap` option). It will then count the number of reads under the intervals for each sample and assign that as a score. Note that this score is for visualization purposes only. Downstream analyses will use a different normalized read score. 
+
+```{r count data}
+samples_count = dba.count(samples,score=DBA_SCORE_READS, minOverlap=2)
+samples_count
+head(samples_count$binding)
+
+```
+
+## 2. Plotting raw count data
+
+Next we will make a heatmap and a PCA plot to evaluate our data. `dba.plotHeatmap()` will take a DBA object and create a heatmap using pearson correlation. `dba.plotPCA()` will take a DBA object and an attribute value `(DBA_FACTOR and DBA_ID)` for coloring and labeling samples.
+
+```{r plot heatmap and PCA}
+dba.plotHeatmap(samples_count)
+dba.plotPCA(samples_count,DBA_FACTOR,label=DBA_ID)
+```
+
+
+## 3. Setting up contrasts and performing DEseq2 analysis
+
+Before performing differential analysis, we need to tell diffbind which groups to compare. `dba.contrast()` will set up a contrast between groups using an attribute value. We will use `DBA_FACTOR` since we want to compare control groups vs ALS groups in this example. The option `minMembers` determines the minimum number of samples or replicates a condition must have in order to be considered for the differential analysis. It is recommneded to have at least two replicates but the option can be changed if replicates are not available. 
+
+```{r set up contrasts}
+als = dba.mask(samples_count, DBA_FACTOR, "ALS")
+ctr = dba.mask(samples_count, DBA_FACTOR, "CTR")
+samples_contrast = dba.contrast(samples_count, als, ctr, "als", "ctr")
+samples_contrast
+```
+
+```{r gc, echo=FALSE, messages=FALSE, results='hide', include=FALSE}
+gc()
+```
+
+Next, we will call `dba.analyze()` to perform the differential analysis between the contrasts we set. We will set the method for differential analysis as `DBA_DESEQ2` and set `bFullLibrarySize=TRUE` in order to use the total number of reads as the library size.
+
+```{r perform DEseq2 analysis}
+samples_differential = dba.analyze(samples_contrast, method = DBA_DESEQ2, bFullLibrarySize = TRUE)
+samples_differential
+```
+
+We see that there are 80 differential peaks between Control and ALS samples with an FDR below .05.
+
+In order to visualize the effect of normalization on our dataset, we will make an MA plot using `dba.plotMA()`. If the slope of the line going through the points is 0, then the normalization is effective. The pink and blue highlighted dots indicate the differential peaks. 
+
+```{r perform MA plot}
+dba.plotMA(samples_differential)
+```
+
+Finally, we will create a DBA report and write out peaks under an FDR of .1 to a bed file for use in other analyses.
+
+
+```{r make report and write peaks}
+samples_differential.DB = dba.report(samples_differential, method=DBA_DESEQ2, th=.1,  bUsePval=F ,  bDB=T, bAll=T)
+samples_differential.DB
+head(as.data.frame(samples_differential.DB$peaks))
+write.table(samples_differential.DB$peaks, file = "ALS_vs_CTR_diff_peaks.bed", quote=F, sep="\t", row.names=F, col.names=F)
+```
+
+## 4. Session Info:
+
+```{r session info}
+sessionInfo()
+```
+
