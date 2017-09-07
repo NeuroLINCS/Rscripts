@@ -107,7 +107,7 @@ Next we will make a heatmap and a PCA plot to evaluate our data. `dba.plotHeatma
 dba.plotHeatmap(samples_count)
 ```
 
-![plot of chunk plot heatmap and PCA](figure/plot_heatmap_and_PCA-1.png?raw=true "Heatmap")<!-- -->
+![plot of chunk plot heatmap and PCA](figure/plot_heatmap_and_PCA-1.svg)
 
 ```r
 dba.plotPCA(samples_count,DBA_FACTOR,label=DBA_ID)
@@ -192,7 +192,7 @@ In order to visualize the effect of normalization on our dataset, we will make a
 dba.plotMA(samples_differential)
 ```
 
-![plot of chunk perform MA plot](figure/perform MA plot-1.png)
+![plot of chunk perform MA plot](figure/perform_MA_plot.svg)
 
 Finally, we will create a DBA report and write out peaks under an FDR of .1 to a bed file for use in other analyses.
 
