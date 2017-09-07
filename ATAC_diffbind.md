@@ -107,13 +107,13 @@ Next we will make a heatmap and a PCA plot to evaluate our data. `dba.plotHeatma
 dba.plotHeatmap(samples_count)
 ```
 
-![plot of chunk plot heatmap and PCA](R-scripts/figure/plot heatmap and PCA-1.svg  ?sanitize=true)
+![plot of chunk plot heatmap and PCA](figure/plot heatmap and PCA-1.png)
 
 ```r
 dba.plotPCA(samples_count,DBA_FACTOR,label=DBA_ID)
 ```
 
-![plot of chunk plot heatmap and PCA](figure/plot heatmap and PCA-2.svg)
+![plot of chunk plot heatmap and PCA](figure/plot heatmap and PCA-2.png)
 
 
 ## 3. Setting up contrasts and performing DEseq2 analysis
@@ -192,7 +192,7 @@ In order to visualize the effect of normalization on our dataset, we will make a
 dba.plotMA(samples_differential)
 ```
 
-![plot of chunk perform MA plot](figure/perform MA plot-1.svg)
+![plot of chunk perform MA plot](figure/perform MA plot-1.png)
 
 Finally, we will create a DBA report and write out peaks under an FDR of .1 to a bed file for use in other analyses.
 
