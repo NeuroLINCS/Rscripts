@@ -194,12 +194,12 @@ dba.plotMA(samples_differential)
 
 ![plot of chunk perform MA plot](figure/perform_MA_plot.svg)
 
-Finally, we will create a DBA report and write out peaks under an FDR of .1 to a bed file for use in other analyses.
+Finally, we will create a DBA report and write out peaks under an FDR of .1 to a bed file for use in other analyses. If you have multiple contrasts (e.g. if you have "ALS", "CTR", and "SMA" lines), you can use the "contrasts" option in dba.report to select a particular contrast.
 
 
 
 ```r
-samples_differential.DB = dba.report(samples_differential, method=DBA_DESEQ2, th=.1,  bUsePval=F ,  bDB=T, bAll=T)
+samples_differential.DB = dba.report(samples_differential, method=DBA_DESEQ2, th=.1, contrast=1  bUsePval=F ,  bDB=T, bAll=T)
 samples_differential.DB
 ```
 
