@@ -21,19 +21,19 @@ For more information on the DiffBind package:
 
 ## 1. Load peaks and counts
 
-We will first load the DiffBind package. 
+We will be running all the steps below in an interactive R shell. From the command line, load the most updated version of R (if you have multiple versions of R), type "R" in the command line and press enter; this will start an interactive R session. We will first load the DiffBind package. 
 
 
 ```r
 library(DiffBind)
 ```
 
-In order to load our data, need to provide diffbind's `dba()` function with a samplesheet containing information about each sample (name, condition, replicate...etc), the locations of the peak files (bed format), and the locations of the bam files containing the aligned reads. The samplesheet can be a dataframe or a csv file. In this example, we will use a csv file. The result of the call to `dba()` is a DBA object.  
+In order to load our data, need to provide diffbind's `dba()` function with a samplesheet containing information about each sample (name, condition, replicate...etc), the locations of the peak files (bed format), and the locations of the bam files containing the aligned reads. The samplesheet can be a dataframe or a csv file. In this example, we will use a csv file. It is available in this github repository.  The result of the call to `dba()` is a DBA object.  
 
 
 
 ```r
-samples=dba(sampleSheet="sample_sheet_diffBind_rmdtest.csv")
+samples=dba(sampleSheet="sample_sheet_diffbind_example.csv")
 ```
 
 ```
@@ -100,7 +100,7 @@ head(samples_count$binding)
 
 ## 2. Plotting raw count data
 
-Next we will make a heatmap and a PCA plot to evaluate our data. `dba.plotHeatmap()` will take a DBA object and create a heatmap using pearson correlation. `dba.plotPCA()` will take a DBA object and an attribute value `(DBA_FACTOR and DBA_ID)` for coloring and labeling samples.
+Next we will make a heatmap and a PCA plot to evaluate our data. `dba.plotHeatmap()` will take a DBA object and create a heatmap using pearson correlation. `dba.plotPCA()` will take a DBA object and an attribute value `(DBA_FACTOR and DBA_ID)` for coloring and labeling samples. We can see that the control and ALS samples cluster together in the heatmap and the PCA plots.
 
 
 ```r
